@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { GET as getTasks } from "@/app/api/tasks/route";
 import { GET as getTests } from "@/app/api/tests/route";
 import { GET as getEvals } from "@/app/api/evals/route";
+import { tests as allTests, evals as allEvals } from "@/lib/mockData";
 
 async function json<T = any>(res: Response): Promise<T> {
   const data = await res.json();
@@ -21,9 +22,11 @@ describe("API: /api/tasks", () => {
 });
 
 describe("API: /api/tests", () => {
-  it("requires taskId", async () => {
+  it("returns all tests when taskId is omitted", async () => {
     const res = await getTests(new Request("http://localhost/api/tests"));
-    expect(res.status).toBe(400);
+    expect(res.ok).toBe(true);
+    const data = await json<any[]>(res as unknown as Response);
+    expect(data.length).toBe(allTests.length);
   });
 
   it("filters by status", async () => {
@@ -47,9 +50,11 @@ describe("API: /api/tests", () => {
 });
 
 describe("API: /api/evals", () => {
-  it("requires testId", async () => {
+  it("returns all evaluations when testId is omitted", async () => {
     const res = await getEvals(new Request("http://localhost/api/evals"));
-    expect(res.status).toBe(400);
+    expect(res.ok).toBe(true);
+    const data = await json<any[]>(res as unknown as Response);
+    expect(data.length).toBe(allEvals.length);
   });
 
   it("filters by status", async () => {
@@ -84,5 +89,14 @@ describe("API: /api/evals", () => {
     );
     const minData = await json<any[]>(res3 as unknown as Response);
     expect(minData.length).toBe(2);
+  });
+
+  it("supports filtering across all tests when testId is omitted", async () => {
+    const res = await getEvals(new Request("http://localhost/api/evals?status=warning&sort=id&order=asc"));
+    expect(res.ok).toBe(true);
+    const data = await json<any[]>(res as unknown as Response);
+    const ids = data.map((e) => e.id);
+    // Should include warnings from multiple tests
+    expect(ids).toEqual(expect.arrayContaining(["eval-101-2", "eval-102-2", "eval-202-1"]));
   });
 });

@@ -72,14 +72,14 @@
     },
     "/api/tests": {
       "get": {
-        "summary": "List test executions for a specific task",
-        "description": "Returns test executions for a given task. Each test has id, taskId, createdAt, and status (pending/completed/failed).",
+        "summary": "List test executions (optionally for a specific task)",
+        "description": "Returns test executions. If a taskId is provided, results are limited to that task; otherwise, returns tests across all tasks. Each test has id, taskId, createdAt, and status (pending/completed/failed).",
         "parameters": [
           {
             "name": "taskId",
             "in": "query",
-            "description": "The id of the task to fetch tests for.",
-            "required": true,
+            "description": "Optional: The id of the task to fetch tests for. When omitted, returns tests across all tasks.",
+            "required": false,
             "schema": { "type": "string" },
             "example": "task-1"
           },
@@ -147,21 +147,20 @@
                 }
               }
             }
-          },
-          "400": { "description": "Missing or invalid taskId." }
+          }
         }
       }
     },
     "/api/evals": {
       "get": {
-        "summary": "List evaluations for a specific test",
-        "description": "Returns evaluations for a given test. Each evaluation has id, name, timestamp, status (passed/failed/warning), and confidenceScore (0-100).",
+        "summary": "List evaluations (optionally for a specific test)",
+        "description": "Returns evaluations. If a testId is provided, results are limited to that test; otherwise, returns evaluations across all tests. Each evaluation has id, name, timestamp, status (passed/failed/warning), and confidenceScore (0-100).",
         "parameters": [
           {
             "name": "testId",
             "in": "query",
-            "description": "The id of the test to fetch evaluations for.",
-            "required": true,
+            "description": "Optional: The id of the test to fetch evaluations for. When omitted, returns evaluations across all tests.",
+            "required": false,
             "schema": { "type": "string" },
             "example": "test-101"
           },
@@ -253,8 +252,7 @@
                 }
               }
             }
-          },
-          "400": { "description": "Missing or invalid testId." }
+          }
         }
       }
     }

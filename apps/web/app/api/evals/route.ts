@@ -4,12 +4,6 @@ import { evals, compareValues, parseDate } from "@/lib/mockData";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const testId = url.searchParams.get("testId");
-  if (!testId) {
-    return new NextResponse(JSON.stringify({ error: "testId is required" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
-  }
 
   const status = url.searchParams.get("status") as "passed" | "failed" | "warning" | null;
   const nameQ = url.searchParams.get("name");
@@ -27,7 +21,11 @@ export async function GET(req: Request) {
     | null) ?? null;
   const order = (url.searchParams.get("order") as "asc" | "desc" | null) ?? "desc";
 
-  let result = evals.filter((e) => e.testId === testId);
+  // Start from all evals; if testId provided, filter down to that test
+  let result = evals.slice();
+  if (testId) {
+    result = result.filter((e) => e.testId === testId);
+  }
 
   if (status) {
     result = result.filter((e) => e.status === status);
