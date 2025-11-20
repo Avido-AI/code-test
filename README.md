@@ -22,18 +22,19 @@ You have a turborepo with everything ready:
 - **Backend**: Mock API serving evaluation scenario results
 
 Available endpoints:
-- `GET /api/tests` — Returns a list of tests with fields: `id`, `name`, `createdAt`, `status` (pending/completed/failed)
+- `GET /api/tasks` — Returns a list of task definitions with fields: `id`, `name`, `description`
+- `GET /api/tasks/:taskId/tests` — Returns test executions for a specific task with fields: `id`, `taskId`, `createdAt`, `status` (pending/completed/failed)
 - `GET /api/tests/:testId/evals` — Returns evaluations for a specific test with fields: `id`, `name`, `timestamp`, `status` (passed/failed/warning), `confidenceScore` (0-100)
 
 ## Mission Briefing: User Feedback from Compliance Teams
 
 Three things the compliance team desperately needs:
 
-1. **See all test results at a glance** — Display every scenario that was tested. A clear, scannable view where they can quickly spot patterns. Red flags should be obvious
+1. **See all test runs and evaluations at a glance** — Display tasks, their test executions, and the evaluations within each test. A clear, hierarchical view where they can see which test runs passed, which had warnings, and which failed. Red flags should be obvious
 
-2. **Filter by date and outcome** — "Show me everything from the last deployment cycle that didn't pass" or "Give me all warnings from the past week." Teams need to slice the data to find the signals that matter
+2. **Filter tests and evals by date and outcome** — "Show me all evaluations from the latest test runs that didn't pass" or "Give me all warnings from the past week." Teams need to slice the data to find the signals that matter
 
-3. **Export evidence for audit trails** — When they approve an AI system, they need proof. Export the filtered results so legal and risk teams have documentation they can reference later
+3. **Export evidence for audit trails** — When they approve an AI system, they need proof. Export the filtered test runs and their evaluations so legal and risk teams have documentation they can reference later
 
 ## What We're Looking For
 
