@@ -1,4 +1,4 @@
-# Mission: AI Safety Dashboard 🛡️
+# Mission: AI Safety Dashboard
 
 ## Welcome to Avido
 
@@ -22,18 +22,19 @@ You have a turborepo with everything ready:
 - **Backend**: Mock API serving evaluation scenario results
 
 Available endpoints:
+
 - `GET /api/tasks` — Returns a list of task definitions with fields: `id`, `name`, `description`
-- `GET /api/tasks/:taskId/tests` — Returns test executions for a specific task with fields: `id`, `taskId`, `createdAt`, `status` (pending/completed/failed)
-- `GET /api/tests/:testId/evals` — Returns evaluations for a specific test with fields: `id`, `name`, `timestamp`, `status` (passed/failed/warning), `confidenceScore` (0-100)
+- `GET /api/tests` — Returns test executions for a specific task with fields: `id`, `taskId`, `createdAt`, `status` (pending/completed/failed)
+- `GET /api/evals` — Returns evaluations for a specific test with fields: `id`, `name`, `timestamp`, `status` (passed/failed/warning), `confidenceScore` (0-100)
+
+The endpoints are also available in the api spec [here](openapi.json)
 
 ## Mission Briefing: User Feedback from Compliance Teams
 
 Three things the compliance team desperately needs:
 
 1. **See all test runs and evaluations at a glance** — Display tasks, their test executions, and the evaluations within each test. A clear, hierarchical view where they can see which test runs passed, which had warnings, and which failed. Red flags should be obvious
-
-2. **Filter tests and evals by date and outcome** — "Show me all evaluations from the latest test runs that didn't pass" or "Give me all warnings from the past week." Teams need to slice the data to find the signals that matter
-
+2. **Detect degradation in live AI systems** — "The system started failing on November 15th, which task degraded?" When monitoring a production AI system, teams need to quickly identify which specific tasks started underperforming after a given date. This helps them isolate the root cause and take action before it impacts customers
 3. **Export evidence for audit trails** — When they approve an AI system, they need proof. Export the filtered test runs and their evaluations so legal and risk teams have documentation they can reference later
 
 ## What We're Looking For
@@ -46,10 +47,9 @@ We evaluate candidates the same way we evaluate AI systems: we look for **safety
 
 ## Getting Started
 
-1. Clone and set up the repo
-2. Start the dev server and navigate to the dashboard package
-3. Mock evaluation data is available immediately
-4. Build using the design system components
+1. Start the dev server and navigate to the dashboard package
+2. Mock evaluation data is available immediately
+3. Build using the design system components
 
 ## Guidance
 
@@ -62,20 +62,21 @@ We evaluate candidates the same way we evaluate AI systems: we look for **safety
 
 You don't need to build everything, but here's what would make this shine:
 
-- [ ] Core dashboard displays scenario results clearly
-- [ ] Filtering works and respects user intent
-- [ ] Export feature works and includes filtered data
-- [ ] Edge cases are handled gracefully (empty states, loading, errors)
-- [ ] Code is clean and would survive a code review
+- [ ]  Core dashboard displays scenario results clearly
+- [ ]  Filtering works and respects user intent
+- [ ]  Export feature works and includes filtered data
+- [ ]  Edge cases are handled gracefully (empty states, loading, errors)
+- [ ]  Code is clean and would survive a code review
 
 Nice-to-haves:
+
 - Tests that catch regressions
 - Storybook stories that document your components
 - Thoughtful polish that feels intentional
 
 ## After You're Done
 
-Push your work and we'll review it together in a 1-hour call. Come ready to walk us through your decisions, explain your priorities, and chat about what you'd build next if you had unlimited time.
+Send your work via email and we'll review it together in a 1-hour call. Come ready to walk us through your decisions, explain your priorities, and chat about what you'd build next if you had unlimited time.
 
 **Remember:** We're not looking for perfection. We're looking for how you think, how you ship, and whether you care about quality. All of those things matter at Avido.
 
