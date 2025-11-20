@@ -1,0 +1,309 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Avido AI Safety Dashboard Mock API",
+    "description": "Mock API serving evaluation scenario results for the Real-World Scenario Evaluation Dashboard. Endpoints return tasks, their test executions, and evaluations.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local dev server"
+    }
+  ],
+  "paths": {
+    "/api/tasks": {
+      "get": {
+        "summary": "List task definitions",
+        "description": "Returns a list of task definitions with fields id, name, description.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Full-text search across name and description.",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["id", "name"]
+            },
+            "example": "name"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tasks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Task" }
+                },
+                "examples": {
+                  "default": {
+                    "value": [
+                      { "id": "task-1", "name": "KYC Document Parsing", "description": "Extract fields from customer documents" },
+                      { "id": "task-2", "name": "Payment Dispute Handling", "description": "Resolve disputes within SLA" }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tests": {
+      "get": {
+        "summary": "List test executions for a specific task",
+        "description": "Returns test executions for a given task. Each test has id, taskId, createdAt, and status (pending/completed/failed).",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "query",
+            "description": "The id of the task to fetch tests for.",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "task-1"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by test status.",
+            "required": false,
+            "schema": { "$ref": "#/components/schemas/TestStatus" },
+            "example": "completed"
+          },
+          {
+            "name": "createdAtFrom",
+            "in": "query",
+            "description": "Only include tests created at or after this timestamp (RFC 3339).",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "createdAtTo",
+            "in": "query",
+            "description": "Only include tests created before or at this timestamp (RFC 3339).",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "status", "id"]
+            },
+            "example": "createdAt"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of test executions for the specified task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Test" }
+                },
+                "examples": {
+                  "default": {
+                    "value": [
+                      { "id": "test-101", "taskId": "task-1", "createdAt": "2025-11-15T09:30:00Z", "status": "completed" },
+                      { "id": "test-102", "taskId": "task-1", "createdAt": "2025-11-16T13:05:00Z", "status": "failed" }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing or invalid taskId." }
+        }
+      }
+    },
+    "/api/evals": {
+      "get": {
+        "summary": "List evaluations for a specific test",
+        "description": "Returns evaluations for a given test. Each evaluation has id, name, timestamp, status (passed/failed/warning), and confidenceScore (0-100).",
+        "parameters": [
+          {
+            "name": "testId",
+            "in": "query",
+            "description": "The id of the test to fetch evaluations for.",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "test-101"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by evaluation status.",
+            "required": false,
+            "schema": { "$ref": "#/components/schemas/EvalStatus" },
+            "example": "failed"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Case-insensitive contains match on evaluation name.",
+            "required": false,
+            "schema": { "type": "string" },
+            "example": "hallucination"
+          },
+          {
+            "name": "timestampFrom",
+            "in": "query",
+            "description": "Only include evaluations at or after this timestamp (RFC 3339).",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "timestampTo",
+            "in": "query",
+            "description": "Only include evaluations at or before this timestamp (RFC 3339).",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "confidenceScoreMin",
+            "in": "query",
+            "description": "Filter by minimum confidence score (inclusive).",
+            "required": false,
+            "schema": { "type": "number", "minimum": 0, "maximum": 100 },
+            "example": 70
+          },
+          {
+            "name": "confidenceScoreMax",
+            "in": "query",
+            "description": "Filter by maximum confidence score (inclusive).",
+            "required": false,
+            "schema": { "type": "number", "minimum": 0, "maximum": 100 },
+            "example": 95
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["timestamp", "confidenceScore", "status", "id"]
+            },
+            "example": "timestamp"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of evaluations for the specified test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Eval" }
+                },
+                "examples": {
+                  "default": {
+                    "value": [
+                      { "id": "eval-1", "name": "Safety Policy Compliance", "timestamp": "2025-11-16T13:10:00Z", "status": "passed", "confidenceScore": 92 },
+                      { "id": "eval-2", "name": "Sensitive Data Leakage", "timestamp": "2025-11-16T13:11:00Z", "status": "warning", "confidenceScore": 78 }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing or invalid testId." }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the task." },
+          "name": { "type": "string", "description": "Human-readable task name." },
+          "description": { "type": "string", "description": "Detailed description of the task." }
+        },
+        "example": { "id": "task-1", "name": "KYC Document Parsing", "description": "Extract fields from customer documents" }
+      },
+      "Test": {
+        "type": "object",
+        "required": ["id", "taskId", "createdAt", "status"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the test run." },
+          "taskId": { "type": "string", "description": "Identifier of the related task." },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (RFC 3339)." },
+          "status": { "$ref": "#/components/schemas/TestStatus" }
+        },
+        "example": { "id": "test-101", "taskId": "task-1", "createdAt": "2025-11-16T13:05:00Z", "status": "completed" }
+      },
+      "Eval": {
+        "type": "object",
+        "required": ["id", "name", "timestamp", "status", "confidenceScore"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the evaluation." },
+          "name": { "type": "string", "description": "Evaluation name." },
+          "timestamp": { "type": "string", "format": "date-time", "description": "Timestamp of the evaluation (RFC 3339)." },
+          "status": { "$ref": "#/components/schemas/EvalStatus" },
+          "confidenceScore": { "type": "number", "minimum": 0, "maximum": 100, "description": "Confidence score from 0 to 100." }
+        },
+        "example": { "id": "eval-1", "name": "Safety Policy Compliance", "timestamp": "2025-11-16T13:10:00Z", "status": "passed", "confidenceScore": 92 }
+      },
+      "TestStatus": {
+        "type": "string",
+        "description": "Status of a test execution.",
+        "enum": ["pending", "completed", "failed"]
+      },
+      "EvalStatus": {
+        "type": "string",
+        "description": "Status of an evaluation.",
+        "enum": ["passed", "failed", "warning"]
+      }
+    }
+  }
+}
