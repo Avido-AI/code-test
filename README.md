@@ -21,8 +21,9 @@ You have a turborepo with everything ready:
 - **Documentation**: Storybook for keeping your components organized
 - **Backend**: Mock API serving evaluation scenario results
 
-Available endpoint:
-- `GET /api/scenarios` — Returns test scenario results with fields: `id`, `name`, `testedAt`, `status` (passed/failed/warning), `confidenceScore` (0-100)
+Available endpoints:
+- `GET /api/tests` — Returns a list of tests with fields: `id`, `name`, `createdAt`, `status` (pending/completed/failed)
+- `GET /api/tests/:testId/evals` — Returns evaluations for a specific test with fields: `id`, `name`, `timestamp`, `status` (passed/failed/warning), `confidenceScore` (0-100)
 
 ## Mission Briefing: User Feedback from Compliance Teams
 
