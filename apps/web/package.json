@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006"
   },
   "dependencies": {
     "@workspace/ui": "workspace:*",
@@ -22,6 +23,8 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@storybook/addon-vitest": "^10.0.8",
+    "@storybook/nextjs-vite": "^10.0.8",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^20.19.9",
     "@types/react": "^19.1.9",
@@ -29,6 +32,7 @@
     "@workspace/eslint-config": "workspace:^",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
+    "storybook": "^10.0.8",
     "typescript": "^5.9.2"
   }
 }
