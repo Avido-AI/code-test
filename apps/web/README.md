@@ -51,6 +51,7 @@ Organization (orgId)
 ### Core Concepts
 
 #### **Experiments**
+
 An experiment represents a structured testing session where you test different configurations of your AI application.
 
 - **Status Flow**: `DRAFT` → `BASELINE_PENDING` → `BASELINE_RUNNING` → `BASELINE_COMPLETED` → `RUNNING` → `COMPLETED`
@@ -58,15 +59,18 @@ An experiment represents a structured testing session where you test different c
 - Must run baseline before creating variants
 
 #### **Steps (LLM Keys)**
+
 Steps represent different LLM calls in your application (e.g., `response_generator`, `input_moderator`). Each variant modifies configuration for one step.
 
 **Step Types:**
+
 - `LLM` - Language model calls
 - `RETRIEVAL` - Vector/document retrieval
 - `TOOL` - Tool/function calls
 - `PROCESSING` - Data processing steps
 
 #### **Variants**
+
 Each variant represents a specific configuration change being tested.
 
 - **Baseline Variant**: Snapshot of current production config
@@ -78,18 +82,22 @@ Each variant represents a specific configuration change being tested.
 Variants can inherit from previous variants via `previousVariantId`. If a new variant is created from an earlier variant (not the latest), all intermediate variants are marked as `REJECTED`.
 
 #### **Tasks**
+
 Tasks define the test scenarios your AI application handles.
 
 **Task Types:**
+
 - `NORMAL` - Standard test cases with dynamic prompts
 - `ADVERSARY` - Adversarial tests with fixed prompts
 
 Each task can have:
+
 - `baseline` - Baseline performance score
 - `inputExamples` - Example user inputs
 - `evalDefinitions` - Evals that run for this task
 
 #### **Tests**
+
 A test represents a single execution of a task.
 
 - Links to a task and optionally to an experiment/variant
@@ -98,9 +106,11 @@ A test represents a single execution of a task.
 - **Status**: `PENDING`, `IN_PROGRESS`, `COMPLETED`, `FAILED`
 
 #### **Eval Definitions**
+
 Define what aspects of your AI's responses to evaluate.
 
 **Eval Types:**
+
 - `NATURALNESS` - G-Eval metrics (coherence, naturalness, relevance, etc.) scored 1-5
 - `STYLE` - Brand voice consistency against style guide, scored 1-5
 - `RECALL` - RAG quality (context relevancy, precision, faithfulness, answer relevancy), scored 0-1
@@ -109,6 +119,7 @@ Define what aspects of your AI's responses to evaluate.
 - `OUTPUT_MATCH` - Output matching against expected format
 
 #### **Evals (Evaluation Results)**
+
 Actual evaluation results for a test.
 
 - Links to test and eval definition
@@ -141,9 +152,10 @@ Experiments add structure to this workflow:
 The mock data includes realistic scenarios demonstrating:
 
 ### Experiment 1: "Improve Response Quality"
+
 - **Focus**: Testing temperature and prompt variations
 - **Steps**: `response_generator`
-- **Variants**: 
+- **Variants**:
   - Baseline (temp 0.7)
   - Lower Temperature (0.3) - **Shows improvement**
   - Enhanced Prompt - **Shows further improvement**
@@ -151,11 +163,13 @@ The mock data includes realistic scenarios demonstrating:
   - Max Tokens Limit (150)
 
 **Key Observation**: Variant 3 (high temperature) shows obvious regression with:
+
 - Failed tests
 - Low faithfulness scores
 - Hallucinations detected in Recall eval metadata
 
 ### Experiment 2: "Optimize for Empathy"
+
 - **Focus**: Making responses more empathetic
 - **Steps**: `response_generator`
 - **Variants**:
@@ -167,6 +181,7 @@ The mock data includes realistic scenarios demonstrating:
 **Key Observation**: The over-empathetic variant scores high on naturalness but **fails policy compliance** - a subtle but important regression.
 
 ### Experiment 3: "Classifier Model Upgrade"
+
 - **Focus**: Testing GPT-4 vs GPT-3.5 for classification
 - **Steps**: `classifier`
 - **Status**: `RUNNING` (in progress)
@@ -247,6 +262,7 @@ apps/web/
 All types are defined in [`lib/types.ts`](lib/types.ts) and aligned with the Prisma schema from the real Avido codebase.
 
 Key types:
+
 - `Experiment`, `ExperimentStatus`
 - `Variant`, `VariantStatus`, `ConfigPatch`, `VariantWithMetrics`
 - `Step`, `StepType`
@@ -284,20 +300,6 @@ The API demonstrates several patterns:
 - **Optional Enrichment**: Use `includeDefinition` or `includeEvalDefinitions`
 - **Metrics Computation**: Variants endpoint computes metrics on the fly
 
-### What's Important
-
-Focus on:
-- Clear data visualization
-- Easy comparison between variants
-- Filtering and discovering regressions
-- Security (orgId handling)
-
-Don't worry about:
-- Data mutations (POST/PUT/DELETE)
-- Real authentication
-- Database design
-- Backend implementation details
-
 ## Resources
 
 - [OpenAPI Specification](../../openapi.json) - Complete API documentation
@@ -307,4 +309,3 @@ Don't worry about:
 ## Questions?
 
 For questions about the assignment, email [alex@avidoai.com](mailto:alex@avidoai.com).
-

@@ -50,6 +50,7 @@ Experiment (e.g., "Improve Response Quality")
 ```
 
 **Key relationships:**
+
 - Each experiment tests a fixed set of tasks
 - Each variant runs the same tasks for fair comparison
 - Tests are tagged with `experimentId` and `variantId`
@@ -62,25 +63,30 @@ See [apps/web/README.md](apps/web/README.md) for comprehensive data model docume
 The dataset includes three experiments demonstrating:
 
 ### Obvious Regression
+
 **Experiment 1, Variant 3** - High temperature (0.9) causes:
+
 - Test failures
 - Hallucinations detected
 - Low faithfulness scores
 - Easy to spot in aggregate metrics
 
 ### Subtle Regression
+
 **Experiment 2, Variant 3** - Over-empathetic prompt causes:
+
 - Good naturalness scores
 - **But**: Policy compliance failures
 - Tests still pass overall
 - Requires drilling into specific eval types
 
 ### Improvements
+
 **Experiment 1, Variants 1-2** show progressive improvements in consistency and accuracy.
 
 ## API Overview
 
-All endpoints require `orgId` query parameter for security:
+In order to mock authentication, all endpoints require an `orgId` query parameter:
 
 ```bash
 # List experiments
