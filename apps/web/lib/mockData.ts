@@ -1,86 +1,871 @@
-// Mock data aligned with the README story
-// - Tasks
-// - Tests with a clear degradation starting on Nov 15
-// - Evals inside tests with pass/warn/fail and confidence scores
+// Mock data for Avido Experiments MVP
+// Includes experiments, variants, tasks, eval definitions, tests, and evals
+// Demonstrates baseline vs variants with regressions and improvements
 
-export type Task = {
-  id: string;
-  name: string;
-  description: string;
-};
+import {
+  Step,
+  StepType,
+  Task,
+  TaskType,
+  EvalDefinition,
+  EvalType,
+  Experiment,
+  ExperimentStatus,
+  Variant,
+  VariantStatus,
+  Run,
+  Test,
+  TestStatus,
+  Eval,
+  ConfigPatch,
+  GEvalResults,
+  RecallEvalResults,
+  CustomEvalResult,
+  StyleEvalResults,
+  HallucinationClassification,
+} from "./types";
 
-export type TestStatus = "pending" | "completed" | "failed";
+// ============ Constants ============
 
-export type TestRun = {
-  id: string;
-  taskId: string;
-  createdAt: string; // RFC3339
-  status: TestStatus;
-};
+const ORG_ID = "org-avido-demo";
+const APP_ID = "app-customer-support";
+const USER_ID = "user-alice";
 
-export type EvalStatus = "passed" | "failed" | "warning";
+// ============ Steps (LLM Keys) ============
 
-export type EvalItem = {
-  id: string;
-  testId: string;
-  name: string;
-  timestamp: string; // RFC3339
-  status: EvalStatus;
-  confidenceScore: number; // 0-100
-};
+export const steps: Step[] = [
+  {
+    id: "step-1",
+    orgId: ORG_ID,
+    externalId: "input_moderator",
+    name: "Input Moderator",
+    description: "Validates and moderates user input for safety",
+    type: StepType.LLM,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+  {
+    id: "step-2",
+    orgId: ORG_ID,
+    externalId: "response_generator",
+    name: "Response Generator",
+    description: "Main LLM that generates customer support responses",
+    type: StepType.LLM,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+  {
+    id: "step-3",
+    orgId: ORG_ID,
+    externalId: "classifier",
+    name: "Intent Classifier",
+    description: "Classifies customer intent to route requests",
+    type: StepType.LLM,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+];
+
+// ============ Tasks ============
 
 export const tasks: Task[] = [
   {
     id: "task-1",
-    name: "KYC Document Parsing",
-    description: "Extract fields from customer documents",
+    orgId: ORG_ID,
+    title: "Account Password Reset",
+    description: "Customer requests password reset instructions",
+    type: TaskType.NORMAL,
+    baseline: 0.92,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["I forgot my password", "How do I reset my password?"],
   },
   {
     id: "task-2",
-    name: "Payment Dispute Handling",
-    description: "Resolve disputes within SLA",
+    orgId: ORG_ID,
+    title: "Billing Inquiry",
+    description: "Customer has questions about their bill",
+    type: TaskType.NORMAL,
+    baseline: 0.88,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Why was I charged twice?", "I don't understand my bill"],
   },
   {
     id: "task-3",
-    name: "Fraud Transaction Triage",
-    description: "Flag and prioritize potentially fraudulent transactions",
+    orgId: ORG_ID,
+    title: "Refund Request",
+    description: "Customer requests a refund for a purchase",
+    type: TaskType.NORMAL,
+    baseline: 0.85,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["I want a refund", "Can I get my money back?"],
+  },
+  {
+    id: "task-4",
+    orgId: ORG_ID,
+    title: "Shipping Status",
+    description: "Customer inquires about order shipping status",
+    type: TaskType.NORMAL,
+    baseline: 0.91,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Where is my order?", "Track my shipment"],
+  },
+  {
+    id: "task-5",
+    orgId: ORG_ID,
+    title: "Product Recommendation",
+    description: "Customer asks for product recommendations",
+    type: TaskType.NORMAL,
+    baseline: 0.83,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["What product should I buy?", "Recommend something for me"],
+  },
+  {
+    id: "task-6",
+    orgId: ORG_ID,
+    title: "Account Deletion Request",
+    description: "Customer wants to delete their account",
+    type: TaskType.NORMAL,
+    baseline: 0.94,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Delete my account", "I want to close my account"],
+  },
+  {
+    id: "task-7",
+    orgId: ORG_ID,
+    title: "Technical Support - Login Issue",
+    description: "Customer cannot log into their account",
+    type: TaskType.NORMAL,
+    baseline: 0.89,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Can't log in", "Login error"],
+  },
+  {
+    id: "task-8",
+    orgId: ORG_ID,
+    title: "Payment Method Update",
+    description: "Customer wants to update payment information",
+    type: TaskType.NORMAL,
+    baseline: 0.90,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Change my credit card", "Update payment method"],
+  },
+  {
+    id: "task-9",
+    orgId: ORG_ID,
+    title: "Subscription Cancellation",
+    description: "Customer wants to cancel their subscription",
+    type: TaskType.NORMAL,
+    baseline: 0.87,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Cancel my subscription", "Stop charging me"],
+  },
+  {
+    id: "task-10",
+    orgId: ORG_ID,
+    title: "Product Feature Inquiry",
+    description: "Customer asks about specific product features",
+    type: TaskType.NORMAL,
+    baseline: 0.86,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Does this have X feature?", "Tell me about the features"],
+  },
+  {
+    id: "task-11",
+    orgId: ORG_ID,
+    title: "Complaint Escalation",
+    description: "Customer is upset and wants to escalate to manager",
+    type: TaskType.ADVERSARY,
+    baseline: 0.78,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["I want to speak to a manager", "This is unacceptable"],
+  },
+  {
+    id: "task-12",
+    orgId: ORG_ID,
+    title: "Privacy Data Request",
+    description: "Customer requests their personal data (GDPR)",
+    type: TaskType.NORMAL,
+    baseline: 0.93,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["I want my data", "GDPR request"],
+  },
+  {
+    id: "task-13",
+    orgId: ORG_ID,
+    title: "Promotional Code Issue",
+    description: "Customer's promo code isn't working",
+    type: TaskType.NORMAL,
+    baseline: 0.84,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["My promo code doesn't work", "Discount code error"],
+  },
+  {
+    id: "task-14",
+    orgId: ORG_ID,
+    title: "Order Modification",
+    description: "Customer wants to change an existing order",
+    type: TaskType.NORMAL,
+    baseline: 0.82,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Change my order", "I ordered the wrong item"],
+  },
+  {
+    id: "task-15",
+    orgId: ORG_ID,
+    title: "Account Security Concern",
+    description: "Customer suspects unauthorized account access",
+    type: TaskType.NORMAL,
+    baseline: 0.95,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Someone accessed my account", "I think I was hacked"],
+  },
+  {
+    id: "task-16",
+    orgId: ORG_ID,
+    title: "Warranty Information",
+    description: "Customer asks about product warranty",
+    type: TaskType.NORMAL,
+    baseline: 0.88,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["What's the warranty?", "How long is the guarantee?"],
+  },
+  {
+    id: "task-17",
+    orgId: ORG_ID,
+    title: "Store Hours Inquiry",
+    description: "Customer asks about store operating hours",
+    type: TaskType.NORMAL,
+    baseline: 0.96,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["When are you open?", "Store hours?"],
+  },
+  {
+    id: "task-18",
+    orgId: ORG_ID,
+    title: "Gift Card Balance",
+    description: "Customer wants to check gift card balance",
+    type: TaskType.NORMAL,
+    baseline: 0.91,
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-20T15:30:00Z",
+    lastTest: "2024-11-20T15:30:00Z",
+    inputExamples: ["Check my gift card balance", "How much is on my card?"],
   },
 ];
 
-// Degradation narrative:
-// - Before 2025-11-15, task-1 runs complete successfully
-// - On and after 2025-11-15, failures start showing up
-export const tests: TestRun[] = [
-  { id: "test-099", taskId: "task-1", createdAt: "2025-11-10T08:15:00Z", status: "completed" },
-  { id: "test-100", taskId: "task-1", createdAt: "2025-11-14T17:40:00Z", status: "completed" },
-  { id: "test-101", taskId: "task-1", createdAt: "2025-11-15T09:30:00Z", status: "completed" },
-  { id: "test-102", taskId: "task-1", createdAt: "2025-11-16T13:05:00Z", status: "failed" },
-  { id: "test-201", taskId: "task-2", createdAt: "2025-11-14T10:00:00Z", status: "completed" },
-  { id: "test-202", taskId: "task-2", createdAt: "2025-11-16T10:30:00Z", status: "pending" },
-  { id: "test-301", taskId: "task-3", createdAt: "2025-11-13T12:00:00Z", status: "completed" },
-  { id: "test-302", taskId: "task-3", createdAt: "2025-11-16T12:30:00Z", status: "completed" },
+// ============ Eval Definitions ============
+
+export const evalDefinitions: EvalDefinition[] = [
+  {
+    id: "eval-def-1",
+    orgId: ORG_ID,
+    type: EvalType.NATURALNESS,
+    name: "Response Naturalness",
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+  {
+    id: "eval-def-2",
+    orgId: ORG_ID,
+    type: EvalType.CUSTOM,
+    name: "Professional Tone",
+    globalConfig: { criterion: "Response maintains a professional, helpful tone" },
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+  {
+    id: "eval-def-3",
+    orgId: ORG_ID,
+    type: EvalType.RECALL,
+    name: "Answer Accuracy",
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+  {
+    id: "eval-def-4",
+    orgId: ORG_ID,
+    type: EvalType.CUSTOM,
+    name: "Policy Compliance",
+    globalConfig: { criterion: "Response follows company policies and does not promise what we cannot deliver" },
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
+  {
+    id: "eval-def-5",
+    orgId: ORG_ID,
+    type: EvalType.STYLE,
+    name: "Brand Voice Consistency",
+    styleGuideId: "style-1",
+    applicationId: APP_ID,
+    createdAt: "2024-11-01T10:00:00Z",
+    modifiedAt: "2024-11-01T10:00:00Z",
+  },
 ];
 
-export const evals: EvalItem[] = [
-  // test-099 (healthy)
-  { id: "eval-099-1", testId: "test-099", name: "Safety Policy Compliance", timestamp: "2025-11-10T08:16:00Z", status: "passed", confidenceScore: 95 },
-  { id: "eval-099-2", testId: "test-099", name: "Sensitive Data Leakage", timestamp: "2025-11-10T08:17:00Z", status: "passed", confidenceScore: 93 },
-  // test-100 (healthy)
-  { id: "eval-100-1", testId: "test-100", name: "Safety Policy Compliance", timestamp: "2025-11-14T17:41:00Z", status: "passed", confidenceScore: 92 },
-  { id: "eval-100-2", testId: "test-100", name: "Sensitive Data Leakage", timestamp: "2025-11-14T17:42:00Z", status: "passed", confidenceScore: 90 },
-  // test-101 (edge of degradation, still ok)
-  { id: "eval-101-1", testId: "test-101", name: "Safety Policy Compliance", timestamp: "2025-11-15T09:31:00Z", status: "passed", confidenceScore: 91 },
-  { id: "eval-101-2", testId: "test-101", name: "Sensitive Data Leakage", timestamp: "2025-11-15T09:32:00Z", status: "warning", confidenceScore: 78 },
-  // test-102 (failed)
-  { id: "eval-102-1", testId: "test-102", name: "Safety Policy Compliance", timestamp: "2025-11-16T13:10:00Z", status: "failed", confidenceScore: 55 },
-  { id: "eval-102-2", testId: "test-102", name: "Sensitive Data Leakage", timestamp: "2025-11-16T13:11:00Z", status: "warning", confidenceScore: 72 },
-  // task-2 mixed
-  { id: "eval-201-1", testId: "test-201", name: "Customer PII Masking", timestamp: "2025-11-14T10:01:00Z", status: "passed", confidenceScore: 90 },
-  { id: "eval-202-1", testId: "test-202", name: "SLA Breach Risk", timestamp: "2025-11-16T10:31:00Z", status: "warning", confidenceScore: 65 },
-  // task-3 healthy
-  { id: "eval-301-1", testId: "test-301", name: "False Positive Rate", timestamp: "2025-11-13T12:01:00Z", status: "passed", confidenceScore: 94 },
-  { id: "eval-302-1", testId: "test-302", name: "False Positive Rate", timestamp: "2025-11-16T12:31:00Z", status: "passed", confidenceScore: 93 },
+// ============ Experiments ============
+
+export const experiments: Experiment[] = [
+  {
+    id: "exp-1",
+    orgId: ORG_ID,
+    name: "Improve Response Quality",
+    description: "Testing different temperature and prompt variations to improve response quality and reduce hallucinations",
+    status: ExperimentStatus.COMPLETED,
+    stepIds: ["step-2"], // response_generator
+    taskIds: ["task-1", "task-2", "task-3", "task-4", "task-5", "task-6", "task-7", "task-8"],
+    createdBy: USER_ID,
+    createdAt: "2024-11-10T09:00:00Z",
+    modifiedAt: "2024-11-20T16:00:00Z",
+  },
+  {
+    id: "exp-2",
+    orgId: ORG_ID,
+    name: "Optimize for Empathy",
+    description: "Testing prompt variations to make responses more empathetic while maintaining professionalism",
+    status: ExperimentStatus.BASELINE_COMPLETED,
+    stepIds: ["step-2"], // response_generator
+    taskIds: ["task-9", "task-10", "task-11", "task-12", "task-13", "task-14"],
+    createdBy: USER_ID,
+    createdAt: "2024-11-15T10:00:00Z",
+    modifiedAt: "2024-11-21T11:00:00Z",
+  },
+  {
+    id: "exp-3",
+    orgId: ORG_ID,
+    name: "Classifier Model Upgrade",
+    description: "Testing GPT-4 vs GPT-3.5 for intent classification accuracy",
+    status: ExperimentStatus.RUNNING,
+    stepIds: ["step-3"], // classifier
+    taskIds: ["task-15", "task-16", "task-17", "task-18"],
+    createdBy: USER_ID,
+    createdAt: "2024-11-18T14:00:00Z",
+    modifiedAt: "2024-11-21T09:00:00Z",
+  },
 ];
+
+// ============ Variants ============
+
+export const variants: Variant[] = [
+  // Experiment 1: Improve Response Quality
+  {
+    id: "var-1-baseline",
+    orgId: ORG_ID,
+    experimentId: "exp-1",
+    name: "Baseline",
+    status: VariantStatus.COMPLETED,
+    configPatch: {
+      model: "gpt-4o",
+      temperature: 0.7,
+      system_prompt: "You are a helpful customer support assistant. Provide accurate, concise answers.",
+    },
+    description: "Current production configuration",
+    createdBy: USER_ID,
+    createdAt: "2024-11-10T09:00:00Z",
+    modifiedAt: "2024-11-10T10:00:00Z",
+  },
+  {
+    id: "var-1-1",
+    orgId: ORG_ID,
+    experimentId: "exp-1",
+    previousVariantId: "var-1-baseline",
+    name: "Lower Temperature",
+    status: VariantStatus.COMPLETED,
+    targetStepId: "step-2",
+    configPatch: {
+      temperature: 0.3,
+    },
+    description: "Testing lower temperature for more consistent responses",
+    createdBy: USER_ID,
+    createdAt: "2024-11-12T10:00:00Z",
+    modifiedAt: "2024-11-12T11:30:00Z",
+  },
+  {
+    id: "var-1-2",
+    orgId: ORG_ID,
+    experimentId: "exp-1",
+    previousVariantId: "var-1-1",
+    name: "Enhanced Prompt",
+    status: VariantStatus.COMPLETED,
+    targetStepId: "step-2",
+    configPatch: {
+      temperature: 0.3,
+      system_prompt: "You are a professional customer support assistant. Always verify facts before responding. Provide accurate, helpful, and empathetic answers. If unsure, acknowledge limitations.",
+    },
+    description: "Added explicit instructions about fact verification",
+    createdBy: USER_ID,
+    createdAt: "2024-11-14T09:00:00Z",
+    modifiedAt: "2024-11-14T11:00:00Z",
+  },
+  {
+    id: "var-1-3",
+    orgId: ORG_ID,
+    experimentId: "exp-1",
+    previousVariantId: "var-1-2",
+    name: "Higher Temperature (REGRESSION)",
+    status: VariantStatus.REJECTED,
+    targetStepId: "step-2",
+    configPatch: {
+      temperature: 0.9,
+      system_prompt: "You are a professional customer support assistant. Always verify facts before responding. Provide accurate, helpful, and empathetic answers. If unsure, acknowledge limitations.",
+    },
+    description: "Testing higher temperature - FAILED: Increased hallucinations",
+    createdBy: USER_ID,
+    createdAt: "2024-11-16T10:00:00Z",
+    modifiedAt: "2024-11-16T12:00:00Z",
+  },
+  {
+    id: "var-1-4",
+    orgId: ORG_ID,
+    experimentId: "exp-1",
+    previousVariantId: "var-1-2",
+    name: "Max Tokens Limit",
+    status: VariantStatus.COMPLETED,
+    targetStepId: "step-2",
+    configPatch: {
+      temperature: 0.3,
+      system_prompt: "You are a professional customer support assistant. Always verify facts before responding. Provide accurate, helpful, and empathetic answers. If unsure, acknowledge limitations.",
+      max_tokens: 150,
+    },
+    description: "Testing conciseness with token limit",
+    createdBy: USER_ID,
+    createdAt: "2024-11-18T09:00:00Z",
+    modifiedAt: "2024-11-18T11:00:00Z",
+  },
+
+  // Experiment 2: Optimize for Empathy
+  {
+    id: "var-2-baseline",
+    orgId: ORG_ID,
+    experimentId: "exp-2",
+    name: "Baseline",
+    status: VariantStatus.COMPLETED,
+    configPatch: {
+      model: "gpt-4o",
+      temperature: 0.7,
+      system_prompt: "You are a helpful customer support assistant. Provide accurate, concise answers.",
+    },
+    description: "Current production configuration",
+    createdBy: USER_ID,
+    createdAt: "2024-11-15T10:00:00Z",
+    modifiedAt: "2024-11-15T11:00:00Z",
+  },
+  {
+    id: "var-2-1",
+    orgId: ORG_ID,
+    experimentId: "exp-2",
+    previousVariantId: "var-2-baseline",
+    name: "Empathy Focus",
+    status: VariantStatus.COMPLETED,
+    targetStepId: "step-2",
+    configPatch: {
+      system_prompt: "You are a compassionate customer support assistant. Show empathy and understanding. Acknowledge customer feelings before providing solutions. Provide accurate, helpful answers with warmth.",
+    },
+    description: "Added empathy and emotional acknowledgment instructions",
+    createdBy: USER_ID,
+    createdAt: "2024-11-17T10:00:00Z",
+    modifiedAt: "2024-11-17T12:00:00Z",
+  },
+  {
+    id: "var-2-2",
+    orgId: ORG_ID,
+    experimentId: "exp-2",
+    previousVariantId: "var-2-1",
+    name: "Empathy + Lower Temp",
+    status: VariantStatus.COMPLETED,
+    targetStepId: "step-2",
+    configPatch: {
+      temperature: 0.4,
+      system_prompt: "You are a compassionate customer support assistant. Show empathy and understanding. Acknowledge customer feelings before providing solutions. Provide accurate, helpful answers with warmth.",
+    },
+    description: "Combining empathy with temperature reduction for consistency",
+    createdBy: USER_ID,
+    createdAt: "2024-11-19T09:00:00Z",
+    modifiedAt: "2024-11-19T11:00:00Z",
+  },
+  {
+    id: "var-2-3",
+    orgId: ORG_ID,
+    experimentId: "exp-2",
+    previousVariantId: "var-2-2",
+    name: "Over-Empathetic (SUBTLE REGRESSION)",
+    status: VariantStatus.COMPLETED,
+    targetStepId: "step-2",
+    configPatch: {
+      temperature: 0.4,
+      system_prompt: "You are an extremely caring and empathetic support assistant. Express deep concern for customer issues. Show extensive understanding and compassion. Make customers feel heard and valued above all else.",
+    },
+    description: "Testing maximum empathy - ISSUE: Reduced policy compliance scores",
+    createdBy: USER_ID,
+    createdAt: "2024-11-20T10:00:00Z",
+    modifiedAt: "2024-11-20T12:00:00Z",
+  },
+
+  // Experiment 3: Classifier Model Upgrade
+  {
+    id: "var-3-baseline",
+    orgId: ORG_ID,
+    experimentId: "exp-3",
+    name: "Baseline (GPT-3.5)",
+    status: VariantStatus.COMPLETED,
+    configPatch: {
+      model: "gpt-3.5-turbo",
+      temperature: 0.2,
+      system_prompt: "Classify the customer intent into one of these categories: billing, technical_support, account_management, product_inquiry, complaint.",
+    },
+    description: "Current production classifier",
+    createdBy: USER_ID,
+    createdAt: "2024-11-18T14:00:00Z",
+    modifiedAt: "2024-11-18T15:00:00Z",
+  },
+  {
+    id: "var-3-1",
+    orgId: ORG_ID,
+    experimentId: "exp-3",
+    previousVariantId: "var-3-baseline",
+    name: "GPT-4o Upgrade",
+    status: VariantStatus.RUNNING,
+    targetStepId: "step-3",
+    configPatch: {
+      model: "gpt-4o",
+    },
+    description: "Testing GPT-4o for better classification accuracy",
+    createdBy: USER_ID,
+    createdAt: "2024-11-20T09:00:00Z",
+    modifiedAt: "2024-11-20T09:30:00Z",
+  },
+];
+
+// ============ Runs ============
+
+export const runs: Run[] = [
+  // Experiment 1 runs
+  { id: "run-1-1", orgId: ORG_ID, experimentId: "exp-1", variantId: "var-1-baseline", applicationId: APP_ID, taskId: "task-1", createdAt: "2024-11-10T10:00:00Z", modifiedAt: "2024-11-10T10:01:00Z" },
+  { id: "run-1-2", orgId: ORG_ID, experimentId: "exp-1", variantId: "var-1-baseline", applicationId: APP_ID, taskId: "task-2", createdAt: "2024-11-10T10:02:00Z", modifiedAt: "2024-11-10T10:03:00Z" },
+  { id: "run-1-3", orgId: ORG_ID, experimentId: "exp-1", variantId: "var-1-baseline", applicationId: APP_ID, taskId: "task-3", createdAt: "2024-11-10T10:04:00Z", modifiedAt: "2024-11-10T10:05:00Z" },
+  { id: "run-1-4", orgId: ORG_ID, experimentId: "exp-1", variantId: "var-1-baseline", applicationId: APP_ID, taskId: "task-4", createdAt: "2024-11-10T10:06:00Z", modifiedAt: "2024-11-10T10:07:00Z" },
+  { id: "run-1-5", orgId: ORG_ID, experimentId: "exp-1", variantId: "var-1-baseline", applicationId: APP_ID, taskId: "task-5", createdAt: "2024-11-10T10:08:00Z", modifiedAt: "2024-11-10T10:09:00Z" },
+  // Add more runs for other variants... (truncated for brevity, but pattern continues)
+];
+
+// ============ Tests ============
+
+export const tests: Test[] = [
+  // Experiment 1 - Baseline variant
+  { id: "test-1-1", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-1", runId: "run-1-1", experimentId: "exp-1", variantId: "var-1-baseline", status: TestStatus.COMPLETED, createdAt: "2024-11-10T10:00:00Z", modifiedAt: "2024-11-10T10:01:00Z" },
+  { id: "test-1-2", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-2", runId: "run-1-2", experimentId: "exp-1", variantId: "var-1-baseline", status: TestStatus.COMPLETED, createdAt: "2024-11-10T10:02:00Z", modifiedAt: "2024-11-10T10:03:00Z" },
+  { id: "test-1-3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-3", runId: "run-1-3", experimentId: "exp-1", variantId: "var-1-baseline", status: TestStatus.COMPLETED, createdAt: "2024-11-10T10:04:00Z", modifiedAt: "2024-11-10T10:05:00Z" },
+  { id: "test-1-4", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-4", runId: "run-1-4", experimentId: "exp-1", variantId: "var-1-baseline", status: TestStatus.COMPLETED, createdAt: "2024-11-10T10:06:00Z", modifiedAt: "2024-11-10T10:07:00Z" },
+  { id: "test-1-5", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-5", runId: "run-1-5", experimentId: "exp-1", variantId: "var-1-baseline", status: TestStatus.COMPLETED, createdAt: "2024-11-10T10:08:00Z", modifiedAt: "2024-11-10T10:09:00Z" },
+  
+  // Experiment 1 - Variant 1 (Lower Temp) - IMPROVED
+  { id: "test-1-1-v1", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-1", experimentId: "exp-1", variantId: "var-1-1", status: TestStatus.COMPLETED, createdAt: "2024-11-12T10:30:00Z", modifiedAt: "2024-11-12T10:31:00Z" },
+  { id: "test-1-2-v1", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-2", experimentId: "exp-1", variantId: "var-1-1", status: TestStatus.COMPLETED, createdAt: "2024-11-12T10:32:00Z", modifiedAt: "2024-11-12T10:33:00Z" },
+  { id: "test-1-3-v1", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-3", experimentId: "exp-1", variantId: "var-1-1", status: TestStatus.COMPLETED, createdAt: "2024-11-12T10:34:00Z", modifiedAt: "2024-11-12T10:35:00Z" },
+  { id: "test-1-4-v1", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-4", experimentId: "exp-1", variantId: "var-1-1", status: TestStatus.COMPLETED, createdAt: "2024-11-12T10:36:00Z", modifiedAt: "2024-11-12T10:37:00Z" },
+  { id: "test-1-5-v1", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-5", experimentId: "exp-1", variantId: "var-1-1", status: TestStatus.COMPLETED, createdAt: "2024-11-12T10:38:00Z", modifiedAt: "2024-11-12T10:39:00Z" },
+
+  // Experiment 1 - Variant 3 (High Temp) - REGRESSION
+  { id: "test-1-1-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-1", experimentId: "exp-1", variantId: "var-1-3", status: TestStatus.COMPLETED, createdAt: "2024-11-16T10:30:00Z", modifiedAt: "2024-11-16T10:31:00Z" },
+  { id: "test-1-2-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-2", experimentId: "exp-1", variantId: "var-1-3", status: TestStatus.FAILED, createdAt: "2024-11-16T10:32:00Z", modifiedAt: "2024-11-16T10:33:00Z" },
+  { id: "test-1-3-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-3", experimentId: "exp-1", variantId: "var-1-3", status: TestStatus.COMPLETED, createdAt: "2024-11-16T10:34:00Z", modifiedAt: "2024-11-16T10:35:00Z" },
+  { id: "test-1-4-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-4", experimentId: "exp-1", variantId: "var-1-3", status: TestStatus.FAILED, createdAt: "2024-11-16T10:36:00Z", modifiedAt: "2024-11-16T10:37:00Z" },
+
+  // Experiment 2 - Variant 3 (Over-empathetic) - SUBTLE REGRESSION
+  { id: "test-2-1-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-9", experimentId: "exp-2", variantId: "var-2-3", status: TestStatus.COMPLETED, createdAt: "2024-11-20T10:30:00Z", modifiedAt: "2024-11-20T10:31:00Z" },
+  { id: "test-2-2-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-10", experimentId: "exp-2", variantId: "var-2-3", status: TestStatus.COMPLETED, createdAt: "2024-11-20T10:32:00Z", modifiedAt: "2024-11-20T10:33:00Z" },
+  { id: "test-2-3-v3", orgId: ORG_ID, applicationId: APP_ID, taskId: "task-11", experimentId: "exp-2", variantId: "var-2-3", status: TestStatus.COMPLETED, createdAt: "2024-11-20T10:34:00Z", modifiedAt: "2024-11-20T10:35:00Z" },
+];
+
+// ============ Evals ============
+
+export const evals: Eval[] = [
+  // Baseline variant - Good scores
+  {
+    id: "eval-1-1-1",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1",
+    definitionId: "eval-def-1",
+    status: TestStatus.COMPLETED,
+    results: {
+      coherence: 4.2,
+      engagingness: 3.8,
+      naturalness: 4.0,
+      relevance: 4.1,
+      clarity: 4.3,
+      analysis: "Response is clear and professional with good structure.",
+    } as GEvalResults,
+    score: 4.08,
+    passed: true,
+    scoreComputedAt: "2024-11-10T10:01:00Z",
+    createdAt: "2024-11-10T10:01:00Z",
+    modifiedAt: "2024-11-10T10:01:00Z",
+  },
+  {
+    id: "eval-1-1-2",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1",
+    definitionId: "eval-def-3",
+    status: TestStatus.COMPLETED,
+    results: {
+      ContextRelevancy: { name: "ContextRelevancy", score: 0.85 },
+      ContextPrecision: { name: "ContextPrecision", score: 0.88 },
+      Faithfulness: { name: "Faithfulness", score: 0.92 },
+      AnswerRelevancy: { name: "AnswerRelevancy", score: 0.89 },
+    } as RecallEvalResults,
+    score: 0.885,
+    passed: true,
+    scoreComputedAt: "2024-11-10T10:01:00Z",
+    createdAt: "2024-11-10T10:01:00Z",
+    modifiedAt: "2024-11-10T10:01:00Z",
+  },
+  {
+    id: "eval-1-1-3",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1",
+    definitionId: "eval-def-4",
+    status: TestStatus.COMPLETED,
+    results: {
+      name: "Policy Compliance",
+      score: 1,
+      metadata: {
+        rationale: "Response adheres to all company policies and makes no undeliverable promises.",
+      },
+    } as CustomEvalResult,
+    score: 1.0,
+    passed: true,
+    scoreComputedAt: "2024-11-10T10:01:00Z",
+    createdAt: "2024-11-10T10:01:00Z",
+    modifiedAt: "2024-11-10T10:01:00Z",
+  },
+
+  // Variant 1 (Lower Temp) - IMPROVED scores
+  {
+    id: "eval-1-1-v1-1",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1-v1",
+    definitionId: "eval-def-1",
+    status: TestStatus.COMPLETED,
+    results: {
+      coherence: 4.5,
+      engagingness: 3.9,
+      naturalness: 4.2,
+      relevance: 4.4,
+      clarity: 4.6,
+      analysis: "Response is highly consistent and well-structured. Lower temperature improved coherence.",
+    } as GEvalResults,
+    score: 4.32,
+    passed: true,
+    scoreComputedAt: "2024-11-12T10:31:00Z",
+    createdAt: "2024-11-12T10:31:00Z",
+    modifiedAt: "2024-11-12T10:31:00Z",
+  },
+  {
+    id: "eval-1-1-v1-2",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1-v1",
+    definitionId: "eval-def-3",
+    status: TestStatus.COMPLETED,
+    results: {
+      ContextRelevancy: { name: "ContextRelevancy", score: 0.91 },
+      ContextPrecision: { name: "ContextPrecision", score: 0.93 },
+      Faithfulness: { name: "Faithfulness", score: 0.96 },
+      AnswerRelevancy: { name: "AnswerRelevancy", score: 0.92 },
+    } as RecallEvalResults,
+    score: 0.93,
+    passed: true,
+    scoreComputedAt: "2024-11-12T10:31:00Z",
+    createdAt: "2024-11-12T10:31:00Z",
+    modifiedAt: "2024-11-12T10:31:00Z",
+  },
+
+  // Variant 3 (High Temp) - REGRESSION - Low scores, hallucinations
+  {
+    id: "eval-1-1-v3-1",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1-v3",
+    definitionId: "eval-def-1",
+    status: TestStatus.COMPLETED,
+    results: {
+      coherence: 3.2,
+      engagingness: 3.5,
+      naturalness: 3.4,
+      relevance: 3.1,
+      clarity: 3.0,
+      analysis: "Response lacks consistency and contains irrelevant details. High temperature caused drift.",
+    } as GEvalResults,
+    score: 3.24,
+    passed: false,
+    scoreComputedAt: "2024-11-16T10:31:00Z",
+    createdAt: "2024-11-16T10:31:00Z",
+    modifiedAt: "2024-11-16T10:31:00Z",
+  },
+  {
+    id: "eval-1-1-v3-2",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-1-1-v3",
+    definitionId: "eval-def-3",
+    status: TestStatus.COMPLETED,
+    results: {
+      ContextRelevancy: { name: "ContextRelevancy", score: 0.72 },
+      ContextPrecision: { name: "ContextPrecision", score: 0.68 },
+      Faithfulness: {
+        name: "Faithfulness",
+        score: 0.55,
+        metadata: {
+          statements: ["Password reset takes 24 hours", "You can call our 24/7 hotline"],
+          faithfulness: [
+            {
+              statement: "Password reset takes 24 hours",
+              reason: "Documentation states reset is immediate, not 24 hours",
+              verdict: 0,
+              classification: HallucinationClassification.UNSUPPORTED_CLAIM,
+            },
+            {
+              statement: "You can call our 24/7 hotline",
+              reason: "Company does not offer phone support",
+              verdict: 0,
+              classification: HallucinationClassification.UNSUPPORTED_CLAIM,
+            },
+          ],
+        },
+      },
+      AnswerRelevancy: { name: "AnswerRelevancy", score: 0.78 },
+    } as RecallEvalResults,
+    score: 0.6825,
+    passed: false,
+    scoreComputedAt: "2024-11-16T10:31:00Z",
+    createdAt: "2024-11-16T10:31:00Z",
+    modifiedAt: "2024-11-16T10:31:00Z",
+  },
+
+  // Variant 2-3 (Over-empathetic) - SUBTLE REGRESSION in policy compliance
+  {
+    id: "eval-2-1-v3-1",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-2-1-v3",
+    definitionId: "eval-def-1",
+    status: TestStatus.COMPLETED,
+    results: {
+      coherence: 4.3,
+      engagingness: 4.7,
+      naturalness: 4.5,
+      relevance: 4.2,
+      clarity: 4.1,
+      analysis: "Response is warm and engaging with excellent empathy.",
+    } as GEvalResults,
+    score: 4.36,
+    passed: true,
+    scoreComputedAt: "2024-11-20T10:31:00Z",
+    createdAt: "2024-11-20T10:31:00Z",
+    modifiedAt: "2024-11-20T10:31:00Z",
+  },
+  {
+    id: "eval-2-1-v3-2",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-2-1-v3",
+    definitionId: "eval-def-4",
+    status: TestStatus.COMPLETED,
+    results: {
+      name: "Policy Compliance",
+      score: 0,
+      metadata: {
+        rationale: "Response shows excessive empathy that leads to promising expedited processing that violates company policy. While tone is excellent, it makes commitments beyond our service level agreements.",
+      },
+    } as CustomEvalResult,
+    score: 0.0,
+    passed: false,
+    scoreComputedAt: "2024-11-20T10:31:00Z",
+    createdAt: "2024-11-20T10:31:00Z",
+    modifiedAt: "2024-11-20T10:31:00Z",
+  },
+  {
+    id: "eval-2-2-v3-2",
+    orgId: ORG_ID,
+    applicationId: APP_ID,
+    testId: "test-2-2-v3",
+    definitionId: "eval-def-4",
+    status: TestStatus.COMPLETED,
+    results: {
+      name: "Policy Compliance",
+      score: 0,
+      metadata: {
+        rationale: "Over-empathetic tone led to promising refunds without following standard verification process.",
+      },
+    } as CustomEvalResult,
+    score: 0.0,
+    passed: false,
+    scoreComputedAt: "2024-11-20T10:33:00Z",
+    createdAt: "2024-11-20T10:33:00Z",
+    modifiedAt: "2024-11-20T10:33:00Z",
+  },
+];
+
+// ============ Utility Functions ============
 
 export function parseDate(value: string | null | undefined): Date | null {
   if (!value) return null;
@@ -88,7 +873,12 @@ export function parseDate(value: string | null | undefined): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-export function compareValues<T extends Record<string, any>>(a: T, b: T, key: keyof T, order: "asc" | "desc" = "asc") {
+export function compareValues<T extends Record<string, any>>(
+  a: T,
+  b: T,
+  key: keyof T,
+  order: "asc" | "desc" = "asc",
+) {
   const va = a[key];
   const vb = b[key];
   let cmp = 0;

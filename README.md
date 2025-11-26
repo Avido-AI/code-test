@@ -1,83 +1,170 @@
-# Mission: AI Safety Dashboard
+# Avido Technical Interview Assignment
 
-## Welcome to Avido
+## Overview
 
-You've just joined the evaluation team at Avido. Our mission is to enable safe AI for better financial wellness, and you're building the interface that helps risk, legal, and compliance teams trust AI systems going into production.
+Welcome to the Avido Experiments MVP take-home assignment! This repository contains everything you need to build a feature that helps customers test different configurations of their AI applications.
 
-Your task: Build a **Real-World Scenario Evaluation Dashboard** that surfaces test results and helps teams quickly understand whether an AI system is ready to go live.
+**What you're building**: An Experiments feature that allows users to systematically test variations in LLM configuration (temperature, prompts, models) and compare results across multiple evaluation metrics.
 
-## The Scenario
+**Time expectation**: ~3 hours focused work
 
-An AI chat assistant for a European fintech is being tested across thousands of real-world scenarios. The evaluation engine has run the tests and generated results. Your job is to build the interface that lets compliance teams see what happened, filter the noise, and make confident sign-off decisions.
+**Deliverable**: Working frontend implementation + discussion of architectural decisions
 
-**Think of it like a mission control dashboard.** Pilots need to know if all systems are go before takeoff. Your interface is their instrument panel.
+## What's Included
 
-## The Setup
+This Turborepo provides:
 
-You have a turborepo with everything ready:
+- **Mock API** - RESTful endpoints serving experiment, variant, task, test, and evaluation data
+- **Type Definitions** - Comprehensive TypeScript types aligned with production schema
+- **Mock Data** - Realistic experiments with baseline variants, improvements, and regressions
+- **Design System** - shadcn/ui components pre-configured
+- **Testing Setup** - Vitest for unit tests
+- **Documentation** - Storybook for component documentation
+- **OpenAPI Spec** - Complete API documentation in [openapi.json](openapi.json)
 
-- **Design system**: shadcn components pre-configured for building trustworthy interfaces
-- **Testing**: Vitest for quality assurance (we care about safe code!)
-- **Documentation**: Storybook for keeping your components organized
-- **Backend**: Mock API serving evaluation scenario results
+## Quick Start
 
-Available endpoints:
+```bash
+# Install dependencies
+pnpm install
 
-- `GET /api/tasks` — Returns a list of task definitions with fields: `id`, `name`, `description`
-- `GET /api/tests` — Returns test executions for a specific task with fields: `id`, `taskId`, `createdAt`, `status` (pending/completed/failed)
-- `GET /api/evals` — Returns evaluations for a specific test with fields: `id`, `name`, `timestamp`, `status` (passed/failed/warning), `confidenceScore` (0-100)
+# Start development server
+pnpm dev
 
-The endpoints are also available in the api spec [here](openapi.json)
+# Open browser to http://localhost:3000
+```
 
-## Mission Briefing: User Feedback from Compliance Teams
+The mock API will be available at `http://localhost:3000/api/*`
 
-Three things the compliance team desperately needs:
+## Understanding the Assignment
 
-1. **See all test runs and evaluations at a glance** — Display tasks, their test executions, and the evaluations within each test. A clear, hierarchical view where they can see which test runs passed, which had warnings, and which failed. Red flags should be obvious
-2. **Detect degradation in live AI systems** — "The system started failing on November 15th, which task degraded?" When monitoring a production AI system, teams need to quickly identify which specific tasks started underperforming after a given date. This helps them isolate the root cause and take action before it impacts customers
-3. **Export evidence for audit trails** — When they approve an AI system, they need proof. Export the filtered test runs and their evaluations so legal and risk teams have documentation they can reference later
+Read the complete assignment details in [ASSIGNMENT.md](ASSIGNMENT.md).
 
-## What We're Looking For
+## Data Model Quick Reference
 
-We evaluate candidates the same way we evaluate AI systems: we look for **safety, clarity, and confidence**.
+```
+Experiment (e.g., "Improve Response Quality")
+  └── Variants (Baseline, Lower Temp, Enhanced Prompt, etc.)
+      └── Tests (one per task)
+          └── Evals (one per eval definition)
+```
 
-- **Safe code** — Handles edge cases, graceful error states, doesn't break under load
-- **Clarity** — The interface tells a clear story. A compliance officer should understand what they're looking at in seconds
-- **Confidence** — Does the code feel solid? Would you trust this in production?
+**Key relationships:**
+- Each experiment tests a fixed set of tasks
+- Each variant runs the same tasks for fair comparison
+- Tests are tagged with `experimentId` and `variantId`
+- Evals measure different aspects (naturalness, accuracy, policy compliance, etc.)
 
-## Getting Started
+See [apps/web/README.md](apps/web/README.md) for comprehensive data model documentation.
 
-1. Start the dev server and navigate to the dashboard package
-2. Mock evaluation data is available immediately
-3. Build using the design system components
+## Mock Data Highlights
 
-## Guidance
+The dataset includes three experiments demonstrating:
 
-- **Ruthless prioritization** — A rock-solid core feature beats three half-baked ones
-- **Tell the story** — What did you prioritize and why? Leave notes for the live review
-- **Use your tools** — AI is part of how we work here. We're interested in your thinking, not whether you hand-wrote every line
-- **Make bold choices** — When requirements are ambiguous, make a reasonable assumption and document it. We value your judgment
+### Obvious Regression
+**Experiment 1, Variant 3** - High temperature (0.9) causes:
+- Test failures
+- Hallucinations detected
+- Low faithfulness scores
+- Easy to spot in aggregate metrics
 
-## Success Criteria
+### Subtle Regression
+**Experiment 2, Variant 3** - Over-empathetic prompt causes:
+- Good naturalness scores
+- **But**: Policy compliance failures
+- Tests still pass overall
+- Requires drilling into specific eval types
 
-You don't need to build everything, but here's what would make this shine:
+### Improvements
+**Experiment 1, Variants 1-2** show progressive improvements in consistency and accuracy.
 
-- [ ]  Core dashboard displays scenario results clearly
-- [ ]  Filtering works and respects user intent
-- [ ]  Export feature works and includes filtered data
-- [ ]  Edge cases are handled gracefully (empty states, loading, errors)
-- [ ]  Code is clean and would survive a code review
+## API Overview
 
-Nice-to-haves:
+All endpoints require `orgId` query parameter for security:
 
-- Tests that catch regressions
-- Storybook stories that document your components
-- Thoughtful polish that feels intentional
+```bash
+# List experiments
+GET /api/experiments?orgId=org-avido-demo
 
-## After You're Done
+# Get variants with metrics
+GET /api/experiments/{id}/variants?orgId=org-avido-demo
 
-Send your work via email and we'll review it together in a 1-hour call. Come ready to walk us through your decisions, explain your priorities, and chat about what you'd build next if you had unlimited time.
+# List available steps (LLM keys)
+GET /api/steps?orgId=org-avido-demo
 
-**Remember:** We're not looking for perfection. We're looking for how you think, how you ship, and whether you care about quality. All of those things matter at Avido.
+# List tasks
+GET /api/tasks?orgId=org-avido-demo
 
-Good luck, agent. Mission awaits. 🚀
+# List tests (with experiment/variant filtering)
+GET /api/tests?orgId=org-avido-demo&variantId=var-1-1
+
+# List evaluations
+GET /api/evals?orgId=org-avido-demo&testId=test-1-1
+```
+
+See [openapi.json](openapi.json) for complete API specification.
+
+## Workspace Structure
+
+```
+.
+├── apps/
+│   └── web/                 # Main Next.js application
+│       ├── app/api/        # Mock API endpoints
+│       ├── lib/            # Types and mock data
+│       └── README.md       # Detailed setup guide
+├── packages/
+│   ├── ui/                 # Shared UI components
+│   ├── eslint-config/      # Shared ESLint config
+│   └── typescript-config/  # Shared TypeScript config
+├── openapi.json            # API specification
+└── ASSIGNMENT.md          # Full assignment details
+```
+
+## Adding UI Components
+
+This project uses [shadcn/ui](https://ui.shadcn.com/):
+
+```bash
+cd apps/web
+pnpm dlx shadcn@latest add <component-name>
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests for specific package
+pnpm --filter web test
+```
+
+## Documentation & Storybook
+
+```bash
+# Start Storybook (if you add stories)
+pnpm storybook
+```
+
+## Next Steps
+
+1. **Read the assignment**: [ASSIGNMENT.md](ASSIGNMENT.md)
+2. **Review the data model**: [apps/web/README.md](apps/web/README.md)
+3. **Explore the API**: Check [openapi.json](openapi.json) or make test requests
+4. **Start building**: `pnpm dev` and create your solution
+
+## Resources
+
+- [Assignment Details](ASSIGNMENT.md) - Full requirements and context
+- [Web App README](apps/web/README.md) - Data model, setup, and tips
+- [OpenAPI Spec](openapi.json) - Complete API documentation
+- [shadcn/ui Docs](https://ui.shadcn.com/) - Component library
+- [Next.js Docs](https://nextjs.org/docs) - Framework documentation
+
+## Questions?
+
+For any questions about the assignment, reach out to [alex@avidoai.com](mailto:alex@avidoai.com).

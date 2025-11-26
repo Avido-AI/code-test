@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { tasks, evalDefinitions, compareValues } from "@/lib/mockData";
-import { TaskWithEvalDefinitions } from "@/lib/types";
+import { steps, compareValues } from "@/lib/mockData";
+import { StepType } from "@/lib/types";
 
 function normalize(s: string) {
   return s.toLowerCase();
@@ -19,21 +19,29 @@ export async function GET(req: Request) {
   }
 
   const q = url.searchParams.get("q");
-  const sort = (url.searchParams.get("sort") as "id" | "title" | null) ?? null;
+  const type = url.searchParams.get("type") as StepType | null;
+  const sort = (url.searchParams.get("sort") as "name" | "externalId" | "type" | null) ?? null;
   const order = (url.searchParams.get("order") as "asc" | "desc" | null) ?? "asc";
-  const includeEvalDefinitions = url.searchParams.get("includeEvalDefinitions") === "true";
 
-  let result = tasks.slice();
+  let result = steps.slice();
 
   // Filter by orgId
-  result = result.filter((t) => t.orgId === orgId);
+  result = result.filter((step) => step.orgId === orgId);
 
   // Filter by search query
   if (q && q.trim()) {
     const qq = normalize(q);
     result = result.filter(
-      (t) => normalize(t.title).includes(qq) || normalize(t.description).includes(qq)
+      (step) =>
+        normalize(step.name).includes(qq) ||
+        normalize(step.externalId).includes(qq) ||
+        (step.description && normalize(step.description).includes(qq))
     );
+  }
+
+  // Filter by type
+  if (type) {
+    result = result.filter((step) => step.type === type);
   }
 
   // Sort
@@ -41,14 +49,6 @@ export async function GET(req: Request) {
     result.sort((a, b) => compareValues(a, b, sort, order));
   }
 
-  // Include eval definitions if requested
-  if (includeEvalDefinitions) {
-    const tasksWithEvalDefs: TaskWithEvalDefinitions[] = result.map((task) => ({
-      ...task,
-      evalDefinitions: evalDefinitions.filter((ed) => ed.orgId === orgId),
-    }));
-    return NextResponse.json(tasksWithEvalDefs);
-  }
-
   return NextResponse.json(result);
 }
+

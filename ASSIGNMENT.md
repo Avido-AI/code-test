@@ -15,14 +15,16 @@ You have a Turborepo with everything ready:
 - **Documentation**: Storybook for keeping components organized
 - **Backend**: Mock API serving data
 
-// TODO: UPDATE
 Available endpoints:
 
-- `GET /api/tasks` — Returns a list of task definitions with fields: `id`, `name`, `description`
-- `GET /api/tests` — Returns test executions for a specific task with fields: `id`, `taskId`, `createdAt`, `status` (pending/completed/failed)
-- `GET /api/evals` — Returns evaluations for a specific test with fields: `id`, `name`, `timestamp`, `status` (passed/failed/warning), `confidenceScore` (0-100)
+- `GET /api/experiments` — Returns experiments with fields: `id`, `name`, `description`, `status`, `createdAt`, `taskIds`, `stepIds`
+- `GET /api/experiments/{id}/variants` — Returns variants for an experiment with fields: `id`, `name`, `status`, `configPatch`, `previousVariantId`, `description`
+- `GET /api/steps` — Returns available steps (LLM keys) with fields: `id`, `externalId`, `name`, `type`, `description`
+- `GET /api/tasks` — Returns a list of tasks with fields: `id`, `title`, `description`, `evalDefinitions`
+- `GET /api/tests` — Returns test executions with fields: `id`, `taskId`, `runId`, `experimentId`, `variantId`, `createdAt`, `status`
+- `GET /api/evals` — Returns evaluations with fields: `id`, `testId`, `definitionId`, `status`, `score`, `results`
 
-The endpoints are also available in the [API spec](openapi.json)
+The endpoints are also available in the [API spec](openapi.json). For detailed setup instructions and data model documentation, see the [Web App README](apps/web/README.md).
 
 ### Build an Experiments MVP
 You're building the first version of a new Experiments feature in Avido. The Experiments feature is meant to help customers seamlessly test different configurations of their AI application without touching code.
@@ -86,37 +88,3 @@ If anything is unclear, make a reasonable assumption and be ready to explain you
 Good luck! We're excited to dive into your solution together.
 
 PS. For any questions, please email [alex@avidoai.com](mailto:alex@avidoai.com)
-
-// Internal To-dos and Notes
-- Make sure data contains tenant such that safe fetching is possible
-- Update data set
-    - Should reflect experiments feature (ie. variants built against each other, tasks etc. See below)
-    - Have types
-    - Obvious regressions
-    - Subtle, but important regressions
-    - Much more data!
-- README should contain
-    - Guide to setting up the repo
-    - Installing components
-    - Explanation of tasks and evals
-    - General explanation of data model
-- Link to above README, dataset and documentation from the assignment and vice-versa.
-
-**Relevant data for experiments**
-- Tasks
-- Eval definitions
-- Experiments (linked to tasks, variants etc)
-- Variants
-- Tests
-- Evals with scores
-
-Ie. we test the ability to
-- fetch data
-- build a proper ux
-- think about future features
-- ui
-- testing the code
-
-but we do not care about
-- data model/structure
-- db/backend stuff

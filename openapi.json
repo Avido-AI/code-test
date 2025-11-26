@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Avido AI Safety Dashboard Mock API",
-    "description": "Mock API serving evaluation scenario results for the Real-World Scenario Evaluation Dashboard. Endpoints return tasks, their test executions, and evaluations.",
+    "title": "Avido Experiments MVP Mock API",
+    "description": "Mock API for the Experiments feature in Avido. Provides endpoints for experiments, variants, steps, tasks, tests, and evaluations. All endpoints require an orgId query parameter for tenant isolation.",
     "version": "1.0.0"
   },
   "servers": [
@@ -12,33 +12,119 @@
     }
   ],
   "paths": {
-    "/api/tasks": {
+    "/api/experiments": {
       "get": {
-        "summary": "List task definitions",
-        "description": "Returns a list of task definitions with fields id, name, description.",
+        "summary": "List experiments",
+        "description": "Returns experiments for the specified organization with optional filtering and sorting.",
         "parameters": [
+          {
+            "name": "orgId",
+            "in": "query",
+            "description": "Organization ID (required for security)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "org-avido-demo"
+          },
           {
             "name": "q",
             "in": "query",
-            "description": "Full-text search across name and description.",
+            "description": "Full-text search across name and description",
             "required": false,
             "schema": { "type": "string" }
           },
           {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by experiment status",
+            "required": false,
+            "schema": { "$ref": "#/components/schemas/ExperimentStatus" }
+          },
+          {
             "name": "sort",
             "in": "query",
-            "description": "Field to sort by.",
+            "description": "Field to sort by",
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["id", "name"]
-            },
-            "example": "name"
+              "enum": ["name", "createdAt", "status"]
+            }
           },
           {
             "name": "order",
             "in": "query",
-            "description": "Sort direction.",
+            "description": "Sort direction",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of experiments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Experiment" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - orgId missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/experiments/{id}/variants": {
+      "get": {
+        "summary": "List variants for an experiment",
+        "description": "Returns variants for a specific experiment with computed metrics including test results and eval scores.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Experiment ID",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "orgId",
+            "in": "query",
+            "description": "Organization ID (required for security)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "org-avido-demo"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by variant status",
+            "required": false,
+            "schema": { "$ref": "#/components/schemas/VariantStatus" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["name", "createdAt", "status"]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction",
             "required": false,
             "schema": {
               "type": "string",
@@ -49,21 +135,181 @@
         ],
         "responses": {
           "200": {
-            "description": "List of tasks.",
+            "description": "List of variants with metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/VariantWithMetrics" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - orgId missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied - orgId mismatch",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Experiment not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/steps": {
+      "get": {
+        "summary": "List steps (LLM keys)",
+        "description": "Returns available steps (LLM keys) that can be configured in experiments.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "query",
+            "description": "Organization ID (required for security)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "org-avido-demo"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Full-text search across name, externalId, and description",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by step type",
+            "required": false,
+            "schema": { "$ref": "#/components/schemas/StepType" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["name", "externalId", "type"]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of steps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Step" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - orgId missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "summary": "List task definitions",
+        "description": "Returns tasks for the specified organization. Optionally includes eval definitions.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "query",
+            "description": "Organization ID (required for security)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "org-avido-demo"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Full-text search across title and description",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "includeEvalDefinitions",
+            "in": "query",
+            "description": "Include eval definitions in response",
+            "required": false,
+            "schema": { "type": "boolean", "default": false }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["id", "title"]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tasks",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/Task" }
-                },
-                "examples": {
-                  "default": {
-                    "value": [
-                      { "id": "task-1", "name": "KYC Document Parsing", "description": "Extract fields from customer documents" },
-                      { "id": "task-2", "name": "Payment Dispute Handling", "description": "Resolve disputes within SLA" }
-                    ]
-                  }
                 }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - orgId missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -72,54 +318,73 @@
     },
     "/api/tests": {
       "get": {
-        "summary": "List test executions (optionally for a specific task)",
-        "description": "Returns test executions. If a taskId is provided, results are limited to that task; otherwise, returns tests across all tasks. Each test has id, taskId, createdAt, and status (pending/completed/failed).",
+        "summary": "List test executions",
+        "description": "Returns test executions with optional filtering by task, experiment, variant, status, and date range.",
         "parameters": [
+          {
+            "name": "orgId",
+            "in": "query",
+            "description": "Organization ID (required for security)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "org-avido-demo"
+          },
           {
             "name": "taskId",
             "in": "query",
-            "description": "Optional: The id of the task to fetch tests for. When omitted, returns tests across all tasks.",
+            "description": "Filter by task ID",
             "required": false,
-            "schema": { "type": "string" },
-            "example": "task-1"
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "experimentId",
+            "in": "query",
+            "description": "Filter by experiment ID",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "variantId",
+            "in": "query",
+            "description": "Filter by variant ID",
+            "required": false,
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
             "in": "query",
-            "description": "Filter by test status.",
+            "description": "Filter by test status",
             "required": false,
-            "schema": { "$ref": "#/components/schemas/TestStatus" },
-            "example": "completed"
+            "schema": { "$ref": "#/components/schemas/TestStatus" }
           },
           {
             "name": "createdAtFrom",
             "in": "query",
-            "description": "Only include tests created at or after this timestamp (RFC 3339).",
+            "description": "Filter tests created at or after this timestamp",
             "required": false,
             "schema": { "type": "string", "format": "date-time" }
           },
           {
             "name": "createdAtTo",
             "in": "query",
-            "description": "Only include tests created before or at this timestamp (RFC 3339).",
+            "description": "Filter tests created before or at this timestamp",
             "required": false,
             "schema": { "type": "string", "format": "date-time" }
           },
           {
             "name": "sort",
             "in": "query",
-            "description": "Field to sort by.",
+            "description": "Field to sort by",
             "required": false,
             "schema": {
               "type": "string",
               "enum": ["createdAt", "status", "id"]
-            },
-            "example": "createdAt"
+            }
           },
           {
             "name": "order",
             "in": "query",
-            "description": "Sort direction.",
+            "description": "Sort direction",
             "required": false,
             "schema": {
               "type": "string",
@@ -130,21 +395,21 @@
         ],
         "responses": {
           "200": {
-            "description": "List of test executions for the specified task.",
+            "description": "List of test executions",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/Test" }
-                },
-                "examples": {
-                  "default": {
-                    "value": [
-                      { "id": "test-101", "taskId": "task-1", "createdAt": "2025-11-15T09:30:00Z", "status": "completed" },
-                      { "id": "test-102", "taskId": "task-1", "createdAt": "2025-11-16T13:05:00Z", "status": "failed" }
-                    ]
-                  }
                 }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - orgId missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -153,78 +418,101 @@
     },
     "/api/evals": {
       "get": {
-        "summary": "List evaluations (optionally for a specific test)",
-        "description": "Returns evaluations. If a testId is provided, results are limited to that test; otherwise, returns evaluations across all tests. Each evaluation has id, name, timestamp, status (passed/failed/warning), and confidenceScore (0-100).",
+        "summary": "List evaluations",
+        "description": "Returns evaluations with optional filtering and the ability to include eval definition metadata.",
         "parameters": [
+          {
+            "name": "orgId",
+            "in": "query",
+            "description": "Organization ID (required for security)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "org-avido-demo"
+          },
           {
             "name": "testId",
             "in": "query",
-            "description": "Optional: The id of the test to fetch evaluations for. When omitted, returns evaluations across all tests.",
+            "description": "Filter by test ID",
             "required": false,
-            "schema": { "type": "string" },
-            "example": "test-101"
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "definitionId",
+            "in": "query",
+            "description": "Filter by eval definition ID",
+            "required": false,
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
             "in": "query",
-            "description": "Filter by evaluation status.",
+            "description": "Filter by evaluation status",
             "required": false,
-            "schema": { "$ref": "#/components/schemas/EvalStatus" },
-            "example": "failed"
+            "schema": { "$ref": "#/components/schemas/TestStatus" }
+          },
+          {
+            "name": "passed",
+            "in": "query",
+            "description": "Filter by pass/fail status",
+            "required": false,
+            "schema": { "type": "boolean" }
           },
           {
             "name": "name",
             "in": "query",
-            "description": "Case-insensitive contains match on evaluation name.",
+            "description": "Search eval definitions by name",
             "required": false,
-            "schema": { "type": "string" },
-            "example": "hallucination"
+            "schema": { "type": "string" }
           },
           {
-            "name": "timestampFrom",
+            "name": "createdAtFrom",
             "in": "query",
-            "description": "Only include evaluations at or after this timestamp (RFC 3339).",
+            "description": "Filter evals created at or after this timestamp",
             "required": false,
             "schema": { "type": "string", "format": "date-time" }
           },
           {
-            "name": "timestampTo",
+            "name": "createdAtTo",
             "in": "query",
-            "description": "Only include evaluations at or before this timestamp (RFC 3339).",
+            "description": "Filter evals created before or at this timestamp",
             "required": false,
             "schema": { "type": "string", "format": "date-time" }
           },
           {
-            "name": "confidenceScoreMin",
+            "name": "scoreMin",
             "in": "query",
-            "description": "Filter by minimum confidence score (inclusive).",
+            "description": "Filter by minimum score",
             "required": false,
-            "schema": { "type": "number", "minimum": 0, "maximum": 100 },
-            "example": 70
+            "schema": { "type": "number" }
           },
           {
-            "name": "confidenceScoreMax",
+            "name": "scoreMax",
             "in": "query",
-            "description": "Filter by maximum confidence score (inclusive).",
+            "description": "Filter by maximum score",
             "required": false,
-            "schema": { "type": "number", "minimum": 0, "maximum": 100 },
-            "example": 95
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "includeDefinition",
+            "in": "query",
+            "description": "Include eval definition metadata in response",
+            "required": false,
+            "schema": { "type": "boolean", "default": false }
           },
           {
             "name": "sort",
             "in": "query",
-            "description": "Field to sort by.",
+            "description": "Field to sort by",
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["timestamp", "confidenceScore", "status", "id"]
-            },
-            "example": "timestamp"
+              "enum": ["createdAt", "score", "status", "id"]
+            }
           },
           {
             "name": "order",
             "in": "query",
-            "description": "Sort direction.",
+            "description": "Sort direction",
             "required": false,
             "schema": {
               "type": "string",
@@ -235,21 +523,21 @@
         ],
         "responses": {
           "200": {
-            "description": "List of evaluations for the specified test.",
+            "description": "List of evaluations",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/Eval" }
-                },
-                "examples": {
-                  "default": {
-                    "value": [
-                      { "id": "eval-1", "name": "Safety Policy Compliance", "timestamp": "2025-11-16T13:10:00Z", "status": "passed", "confidenceScore": 92 },
-                      { "id": "eval-2", "name": "Sensitive Data Leakage", "timestamp": "2025-11-16T13:11:00Z", "status": "warning", "confidenceScore": 78 }
-                    ]
-                  }
                 }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - orgId missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -259,48 +547,204 @@
   },
   "components": {
     "schemas": {
-      "Task": {
+      "Error": {
         "type": "object",
-        "required": ["id", "name", "description"],
+        "required": ["error"],
         "properties": {
-          "id": { "type": "string", "description": "Unique identifier for the task." },
-          "name": { "type": "string", "description": "Human-readable task name." },
-          "description": { "type": "string", "description": "Detailed description of the task." }
-        },
-        "example": { "id": "task-1", "name": "KYC Document Parsing", "description": "Extract fields from customer documents" }
+          "error": { "type": "string", "description": "Error message" }
+        }
       },
-      "Test": {
-        "type": "object",
-        "required": ["id", "taskId", "createdAt", "status"],
-        "properties": {
-          "id": { "type": "string", "description": "Unique identifier for the test run." },
-          "taskId": { "type": "string", "description": "Identifier of the related task." },
-          "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (RFC 3339)." },
-          "status": { "$ref": "#/components/schemas/TestStatus" }
-        },
-        "example": { "id": "test-101", "taskId": "task-1", "createdAt": "2025-11-16T13:05:00Z", "status": "completed" }
+      "ExperimentStatus": {
+        "type": "string",
+        "enum": ["DRAFT", "BASELINE_PENDING", "BASELINE_RUNNING", "BASELINE_COMPLETED", "RUNNING", "COMPLETED", "ARCHIVED"],
+        "description": "Status of an experiment"
       },
-      "Eval": {
-        "type": "object",
-        "required": ["id", "name", "timestamp", "status", "confidenceScore"],
-        "properties": {
-          "id": { "type": "string", "description": "Unique identifier for the evaluation." },
-          "name": { "type": "string", "description": "Evaluation name." },
-          "timestamp": { "type": "string", "format": "date-time", "description": "Timestamp of the evaluation (RFC 3339)." },
-          "status": { "$ref": "#/components/schemas/EvalStatus" },
-          "confidenceScore": { "type": "number", "minimum": 0, "maximum": 100, "description": "Confidence score from 0 to 100." }
-        },
-        "example": { "id": "eval-1", "name": "Safety Policy Compliance", "timestamp": "2025-11-16T13:10:00Z", "status": "passed", "confidenceScore": 92 }
+      "VariantStatus": {
+        "type": "string",
+        "enum": ["DRAFT", "RUNNING", "COMPLETED", "FAILED", "REJECTED"],
+        "description": "Status of a variant"
       },
       "TestStatus": {
         "type": "string",
-        "description": "Status of a test execution.",
-        "enum": ["pending", "completed", "failed"]
+        "enum": ["PENDING", "IN_PROGRESS", "FAILED", "COMPLETED"],
+        "description": "Status of a test execution or evaluation"
       },
-      "EvalStatus": {
+      "StepType": {
         "type": "string",
-        "description": "Status of an evaluation.",
-        "enum": ["passed", "failed", "warning"]
+        "enum": ["LLM", "RETRIEVAL", "TOOL", "PROCESSING"],
+        "description": "Type of step in the application"
+      },
+      "EvalType": {
+        "type": "string",
+        "enum": ["NATURALNESS", "STYLE", "RECALL", "CUSTOM", "FACT", "OUTPUT_MATCH"],
+        "description": "Type of evaluation"
+      },
+      "TaskType": {
+        "type": "string",
+        "enum": ["ADVERSARY", "NORMAL"],
+        "description": "Type of task"
+      },
+      "Experiment": {
+        "type": "object",
+        "required": ["id", "orgId", "name", "status", "stepIds", "taskIds", "createdBy", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "name": { "type": "string", "description": "Experiment name" },
+          "description": { "type": "string", "description": "Optional description" },
+          "status": { "$ref": "#/components/schemas/ExperimentStatus" },
+          "stepIds": { "type": "array", "items": { "type": "string" }, "description": "Steps in scope" },
+          "taskIds": { "type": "array", "items": { "type": "string" }, "description": "Fixed task set" },
+          "createdBy": { "type": "string", "description": "User who created the experiment" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ConfigPatch": {
+        "type": "object",
+        "description": "Configuration overrides for a variant",
+        "properties": {
+          "system_prompt": { "type": "string" },
+          "temperature": { "type": "number" },
+          "top_p": { "type": "number" },
+          "max_tokens": { "type": "integer" },
+          "model": { "type": "string" }
+        }
+      },
+      "Variant": {
+        "type": "object",
+        "required": ["id", "orgId", "experimentId", "name", "status", "configPatch", "createdBy", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "experimentId": { "type": "string", "description": "Parent experiment ID" },
+          "previousVariantId": { "type": "string", "description": "Variant this was inherited from" },
+          "name": { "type": "string", "description": "Variant name" },
+          "status": { "$ref": "#/components/schemas/VariantStatus" },
+          "targetStepId": { "type": "string", "description": "Step being modified (null for baseline)" },
+          "configPatch": { "$ref": "#/components/schemas/ConfigPatch" },
+          "description": { "type": "string", "description": "Optional description" },
+          "createdBy": { "type": "string", "description": "User who created the variant" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "VariantMetrics": {
+        "type": "object",
+        "required": ["totalTests", "completedTests", "failedTests", "avgScore", "passRate", "evalBreakdown"],
+        "properties": {
+          "totalTests": { "type": "integer", "description": "Total number of tests" },
+          "completedTests": { "type": "integer", "description": "Number of completed tests" },
+          "failedTests": { "type": "integer", "description": "Number of failed tests" },
+          "avgScore": { "type": "number", "description": "Average eval score" },
+          "passRate": { "type": "number", "description": "Percentage of evals that passed" },
+          "evalBreakdown": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "definitionId": { "type": "string" },
+                "name": { "type": "string" },
+                "avgScore": { "type": "number" },
+                "passRate": { "type": "number" }
+              }
+            }
+          }
+        }
+      },
+      "VariantWithMetrics": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Variant" },
+          {
+            "type": "object",
+            "properties": {
+              "metrics": { "$ref": "#/components/schemas/VariantMetrics" }
+            }
+          }
+        ]
+      },
+      "Step": {
+        "type": "object",
+        "required": ["id", "orgId", "externalId", "name", "type", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "externalId": { "type": "string", "description": "External identifier used in webhooks" },
+          "name": { "type": "string", "description": "Human-readable name" },
+          "description": { "type": "string", "description": "Optional description" },
+          "type": { "$ref": "#/components/schemas/StepType" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "required": ["id", "orgId", "title", "description", "type", "applicationId", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "title": { "type": "string", "description": "Task title" },
+          "description": { "type": "string", "description": "Task description" },
+          "type": { "$ref": "#/components/schemas/TaskType" },
+          "baseline": { "type": "number", "description": "Baseline score" },
+          "metadata": { "type": "object", "description": "Additional metadata" },
+          "applicationId": { "type": "string", "description": "Application ID" },
+          "topicId": { "type": "string", "description": "Optional topic ID" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" },
+          "lastTest": { "type": "string", "format": "date-time", "description": "Timestamp of last test" },
+          "inputExamples": { "type": "array", "items": { "type": "string" }, "description": "Example inputs" }
+        }
+      },
+      "EvalDefinition": {
+        "type": "object",
+        "required": ["id", "orgId", "type", "name", "applicationId", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "type": { "$ref": "#/components/schemas/EvalType" },
+          "name": { "type": "string", "description": "Eval definition name" },
+          "globalConfig": { "type": "object", "description": "Global configuration" },
+          "applicationId": { "type": "string", "description": "Application ID" },
+          "styleGuideId": { "type": "string", "description": "Optional style guide ID" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Test": {
+        "type": "object",
+        "required": ["id", "orgId", "applicationId", "taskId", "status", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "applicationId": { "type": "string", "description": "Application ID" },
+          "taskId": { "type": "string", "description": "Task ID" },
+          "runId": { "type": "string", "description": "Optional run ID" },
+          "experimentId": { "type": "string", "description": "Experiment ID (null for regular tests)" },
+          "variantId": { "type": "string", "description": "Variant ID (null for regular tests)" },
+          "traceId": { "type": "string", "description": "Optional trace ID" },
+          "status": { "$ref": "#/components/schemas/TestStatus" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Eval": {
+        "type": "object",
+        "required": ["id", "orgId", "applicationId", "testId", "definitionId", "status", "results", "score", "passed", "scoreComputedAt", "createdAt", "modifiedAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier" },
+          "orgId": { "type": "string", "description": "Organization ID" },
+          "applicationId": { "type": "string", "description": "Application ID" },
+          "testId": { "type": "string", "description": "Test ID" },
+          "definitionId": { "type": "string", "description": "Eval definition ID" },
+          "status": { "$ref": "#/components/schemas/TestStatus" },
+          "results": { "type": "object", "description": "Eval results (type varies by eval type)" },
+          "score": { "type": "number", "description": "Computed score (0-1 for most types, 0-5 for naturalness)" },
+          "passed": { "type": "boolean", "description": "Whether the eval passed" },
+          "scoreComputedAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "modifiedAt": { "type": "string", "format": "date-time" }
+        }
       }
     }
   }
