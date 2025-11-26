@@ -4,7 +4,7 @@
 
 Welcome! We know your time is valuable. This assignment is designed to take about 3 hours, and we're much more interested in your thought process than in a perfect product. If you don't finish everything, that's completely fine — just be ready to walk us through what you'd do next.
 
-What we're looking for: How you think about building features, make architectural decisions, and work with an existing codebase.
+What we're looking for: How you think about building features, and make architectural decisions.
 
 Presentation: 1 hour (demo + discussion)
 
