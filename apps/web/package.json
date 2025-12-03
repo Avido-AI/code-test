@@ -24,24 +24,24 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@storybook/addon-vitest": "^10.1.2",
-    "@storybook/nextjs-vite": "^10.1.2",
-    "@storybook/react": "^10.1.2",
+    "@storybook/addon-vitest": "^10.1.4",
+    "@storybook/nextjs-vite": "^10.1.4",
+    "@storybook/react": "^10.1.4",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "@vitest/browser": "^4.0.14",
-    "@vitest/coverage-v8": "^4.0.14",
+    "@vitest/browser": "^4.0.15",
+    "@vitest/coverage-v8": "^4.0.15",
     "@workspace/eslint-config": "workspace:^",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^9.39.1",
     "playwright": "^1.57.0",
-    "storybook": "^10.1.2",
+    "storybook": "^10.1.4",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.14"
+    "vitest": "^4.0.15"
   }
 }
